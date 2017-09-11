@@ -18,7 +18,7 @@
     self.layer.borderWidth = 2.0;
     self.layer.cornerRadius = 10.0;
     
-    UIImage *tintedImage = [self.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *tintedImage = [self.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
     [self.normalButton setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 

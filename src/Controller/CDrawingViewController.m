@@ -67,10 +67,10 @@
     self.undoButton.enabled = NO;
     self.redoButton.enabled = NO;
     
-    UIImage *cancelImage = [self.cancelButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *cancelImage = [self.cancelButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
     [self.cancelButton setBackgroundImage:cancelImage forState:UIControlStateNormal];
     
-    UIImage *confirmImage = [self.confirmButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *confirmImage = [self.confirmButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
     [self.confirmButton setBackgroundImage:confirmImage forState:UIControlStateNormal];
     
     //Sets up our UI
@@ -124,7 +124,7 @@
     
     self.drawingBackgroundView.contentMode = UIViewContentModeScaleAspectFit;
     
-    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleKeepingAlpha];
     [self.playButton setBackgroundImage:playImage forState:UIControlStateNormal];
      
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(lineCapChanged:) name:LINE_CAP_CHANGED_NOTIFICATION_NAME object:nil];
@@ -145,7 +145,7 @@
 - (void)stop {
     self.brushView.hidden = NO;
     
-    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleKeepingAlpha];
     [self.playButton setBackgroundImage:playImage forState:UIControlStateNormal];
     [self.playerLayer removeFromSuperlayer];
     self.player = nil;
@@ -562,7 +562,7 @@
         [self.drawingBackgroundView.layer addSublayer:self.playerLayer];
         [self.player play];
         
-        UIImage *playButtonImage = [[UIImage imageNamed:@"stop"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+        UIImage *playButtonImage = [[UIImage imageNamed:@"stop"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleKeepingAlpha];
         [self.playButton setBackgroundImage:playButtonImage forState:UIControlStateNormal];
 
         sender.tag = 1;
@@ -603,7 +603,7 @@
         }
         
         UIButton *button = (UIButton*)view;
-        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
         [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
     }
 }
@@ -613,7 +613,7 @@
     if(sender.tag != 4) {
         [self removeBrushSelections];
         
-        UIImage *sendImage = [sender.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+        UIImage *sendImage = [sender.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
         [sender setBackgroundImage:sendImage forState:UIControlStateNormal];
     }
     
@@ -624,7 +624,7 @@
             //We're starting to erase
             sender.tag = 1;
             
-            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
             [sender setBackgroundImage:senderImage forState:UIControlStateNormal];
             
             self.drawingView.brushType = CBrushTypeEraser;
@@ -635,12 +635,12 @@
             //We're no longer erasing
             sender.tag = 0;
             
-            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
             [sender setBackgroundImage:senderImage forState:UIControlStateNormal];
             self.drawingView.color = self.drawingView.backupColor;
             self.drawingView.brushType = CBrushTypeNormal;
             
-            UIImage *normalButtonImage = [self.brushView.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            UIImage *normalButtonImage = [self.brushView.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
             [self.brushView.normalButton setBackgroundImage:normalButtonImage forState:UIControlStateNormal];
         }
     }
@@ -679,7 +679,7 @@
     //We're in the shape mode
     [self removeBrushSelections];
     
-    UIImage *shapeImage = [self.brushView.shapeButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *shapeImage = [self.brushView.shapeButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleKeepingAlpha];
     [self.brushView.shapeButton setBackgroundImage:shapeImage forState:UIControlStateNormal];
     
     self.drawingView.brushType = CBrushTypeShape;
@@ -718,10 +718,10 @@
     self.lineWidthButton.tintColor = [UIColor blackColor];
     button.tag = -3;
     
-    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleOverAlpha];
+    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleKeepingAlpha];
     [button setBackgroundImage:buttonImage forState:UIControlStateNormal];
     
-    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleKeepingAlpha];
     [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
     
     //Sets up our slider with the variables needed to change opacity
@@ -753,10 +753,10 @@
     self.opacityButton.tintColor = [UIColor blackColor];
     button.tag = -2;
     
-    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleOverAlpha];
+    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleKeepingAlpha];
     [button setBackgroundImage:buttonImage forState:UIControlStateNormal];
     
-    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleKeepingAlpha];
     [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
     
     //Sets up our slider with the variables needed to change line width
@@ -811,10 +811,10 @@
         self.opacityButton.tintColor = [UIColor blackColor];
         self.lineWidthButton.tintColor = [UIColor blackColor];
 
-        UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+        UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleKeepingAlpha];
         [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
         
-        UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+        UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleKeepingAlpha];
         [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
         
         self.animating = YES;
@@ -941,10 +941,10 @@
                     self.opacityButton.tintColor = [UIColor blackColor];
                     self.lineWidthButton.tintColor = [UIColor blackColor];
                     
-                    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+                    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleKeepingAlpha];
                     [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
                     
-                    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+                    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleKeepingAlpha];
                     [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
                     
                     [UIView animateWithDuration:0.125 animations:^{

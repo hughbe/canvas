@@ -390,7 +390,6 @@
 				1EBA1D061F66D2FA009B8067 /* help.png */,
 				1EBA1D071F66D2FA009B8067 /* help@2x.png */,
 				1EBA1D121F66D2FA009B8067 /* Top Bar */,
-				1EBA1D271F66D2FA009B8067 /* Top Bar - Copy */,
 			);
 			name = Resources;
 			path = src/UI/Resources;
@@ -582,29 +581,6 @@
 				1EBA1D181F66D2FA009B8067 /* play@2x.png */,
 				1EBA1D191F66D2FA009B8067 /* stop.png */,
 				1EBA1D1A1F66D2FA009B8067 /* stop@2x.png */,
-			);
-			path = Control;
-			sourceTree = "<group>";
-		};
-		1EBA1D271F66D2FA009B8067 /* Top Bar - Copy */ = {
-			isa = PBXGroup;
-			children = (
-				1EBA1D281F66D2FA009B8067 /* Backup */,
-				1EBA1D291F66D2FA009B8067 /* Control */,
-			);
-			path = "Top Bar - Copy";
-			sourceTree = "<group>";
-		};
-		1EBA1D281F66D2FA009B8067 /* Backup */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Backup;
-			sourceTree = "<group>";
-		};
-		1EBA1D291F66D2FA009B8067 /* Control */ = {
-			isa = PBXGroup;
-			children = (
 			);
 			path = Control;
 			sourceTree = "<group>";

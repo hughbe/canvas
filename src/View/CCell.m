@@ -43,7 +43,7 @@
     [self.imageView addGestureRecognizer:[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(expand:)]];
     
     for(UIButton *button in [self.optionsView.subviews copy]) {
-        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
         [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
     }
     
@@ -148,13 +148,13 @@
             x1 = x2 + 15;
             duration = 0.2;
             
-            UIImage *tintedImage = [[UIImage imageNamed:@"reveal"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+            UIImage *tintedImage = [[UIImage imageNamed:@"reveal"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
             [sender setBackgroundImage:tintedImage forState:UIControlStateNormal];
         }
         else {
             x1 = -15;
             //Show the optionsView
-            UIImage *tintedImage = [[UIImage imageNamed:@"hide"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+            UIImage *tintedImage = [[UIImage imageNamed:@"hide"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleKeepingAlpha];
             [sender setBackgroundImage:tintedImage forState:UIControlStateNormal];
         }
         //Animates the showing or hiding of the optionsView

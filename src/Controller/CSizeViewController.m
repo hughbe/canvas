@@ -50,7 +50,7 @@
     [self sliderChanged:self.heightSlider];
     
     UIButton *button = self.navigationItem.rightBarButtonItem.customView;
-    UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleKeepingAlpha];
     [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 

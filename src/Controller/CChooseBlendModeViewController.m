@@ -20,7 +20,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    UIImage *tintedImage = [self.tickButton.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleOverAlpha];
+    UIImage *tintedImage = [self.tickButton.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleKeepingAlpha];
     [self.tickButton setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 
