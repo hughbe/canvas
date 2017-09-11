@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="3396" systemVersion="12F45" minimumToolsVersion="Xcode 4.5" macOSVersion="Automatic" iOSVersion="iOS 7.0">
+    <entity name="Drawing" syncable="YES">
+        <attribute name="background" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="fileID" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="pathArray" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="size" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="videoPath" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="IDS" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Drawing" positionX="63" positionY="404" width="128" height="148"/>
+        <element name="IDS" positionX="-225" positionY="414" width="128" height="58"/>
+    </elements>
+</model>
