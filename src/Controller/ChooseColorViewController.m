@@ -7,7 +7,6 @@
 //
 
 #import "ChooseColorViewController.h"
-#import "UIExtensions.h"
 
 @interface ChooseColorViewController ()
 
@@ -37,11 +36,12 @@
     
     //Hide the borders surrounding our
     [self hideBorders];
-    [self.scrollView findAllSubviewsOfClass:[UIView class] andPerformBlock:^(UIView *view) {
-        if([cp.selectionColor isEqualToColor:view.backgroundColor]) {
+
+    for(UIView *view in [self.scrollView.subviews copy]) {
+        if ([cp.selectionColor isEqual:view.backgroundColor]) {
             view.layer.borderWidth = 2.0f;
         }
-    }];
+    }
 }
 
 - (void)definedColorPressed:(UITapGestureRecognizer*)gestureRecognizer {
@@ -78,28 +78,32 @@
     self.brightnessContainer.layer.cornerRadius = 15.0f;
     
     //Sets us up to select colors from preset list
-    [self.scrollView findAllSubviewsOfClass:[UIView class] andPerformBlock:^(UIView *view) {
+    for(UIView *view in [self.scrollView.subviews copy]) {
         [view addGestureRecognizer:[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(definedColorPressed:)]];
-    }];
+    }
     
     //Autosizes the scrollView to fit content
-    [self.scrollView sizeContentToFit];
+    CGRect contentRect = CGRectZero;
+    for (UIView *view in self.scrollView.subviews) {
+        contentRect = CGRectUnion(contentRect, view.frame);
+    }
+    self.scrollView.contentSize = contentRect.size;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self.scrollView findAllSubviewsOfClass:[UIView class] andPerformBlock:^(UIView *view) {
-        if([view.backgroundColor isEqualToColor:self.initialColor]) {
+    for(UIView *view in [self.scrollView.subviews copy]) {
+        if([view.backgroundColor isEqual:self.initialColor]) {
             view.layer.borderWidth = 2.0f;
         }
-    }];
+    }
 }
 
 - (void)hideBorders {
     //All subviews in our scrollView will have their borders removed
-    [self.scrollView findAllSubviewsOfClass:[UIView class] andPerformBlock:^(UIView *view) {
+    for(UIView *view in [self.scrollView.subviews copy]) {
         view.layer.borderWidth = 0.0f;
-    }];
+    };
 }
 
 @end

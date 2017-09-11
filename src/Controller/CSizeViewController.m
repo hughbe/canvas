@@ -9,7 +9,7 @@
 #import "CSizeViewController.h"
 
 #import "CModel.h"
-#import "UIExtensions.h"
+#import "UIImage+Additions.h"
 
 @interface CSizeViewController ()
 
@@ -49,7 +49,9 @@
     [self sliderChanged:self.widthSlider];
     [self sliderChanged:self.heightSlider];
     
-    [(UIButton*)(self.navigationItem.rightBarButtonItem.customView) tintBackgroundImageWithColor:[UIColor whiteColor]];
+    UIButton *button = self.navigationItem.rightBarButtonItem.customView;
+    UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleOverAlpha];
+    [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 
 - (IBAction)sliderChanged:(UISlider*)sender {

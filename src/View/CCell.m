@@ -7,9 +7,12 @@
 //
 
 #import "CCell.h"
-#import "UIExtensions.h"
-#import "CDrawingView.h"
+
 #import <MediaPlayer/MediaPlayer.h>
+
+#import "UIImage+Additions.h"
+#import "UIView+Borders.h"
+#import "CDrawingView.h"
 
 @interface CCell ()
 
@@ -29,9 +32,9 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     
-    [self.optionsView addBottomBorderWithWidth:0.75 color:[UIColor lightGrayColor]];
-    [self.titleView addBottomBorderWithWidth:0.75 color:[UIColor lightGrayColor]];
-    [self.bottomView addTopBorderWithWidth:0.75 color:[UIColor lightGrayColor]];
+    [self.optionsView addBottomBorderWithHeight:0.75 andColor:[UIColor lightGrayColor]];
+    [self.titleView addBottomBorderWithHeight:0.75 andColor:[UIColor lightGrayColor]];
+    [self.bottomView addBottomBorderWithHeight:0.75 andColor:[UIColor lightGrayColor]];
     
     
     self.layer.cornerRadius = 10.0f;
@@ -40,7 +43,8 @@
     [self.imageView addGestureRecognizer:[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(expand:)]];
     
     for(UIButton *button in [self.optionsView.subviews copy]) {
-        [button tintBackgroundImageWithColor:[UIColor blackColor]];
+        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+        [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
     }
     
     [[NSNotificationCenter defaultCenter]addObserverForName:MPMoviePlayerDidEnterFullscreenNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -143,12 +147,15 @@
             x2 = self.frame.size.width - 44;
             x1 = x2 + 15;
             duration = 0.2;
-            [sender setBackgroundImage:[UIImage tintedImageNamed:@"reveal" tint:[UIColor blackColor]] forState:UIControlStateNormal];
+            
+            UIImage *tintedImage = [[UIImage imageNamed:@"reveal"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+            [sender setBackgroundImage:tintedImage forState:UIControlStateNormal];
         }
         else {
             x1 = -15;
             //Show the optionsView
-            [sender setBackgroundImage:[UIImage tintedImageNamed:@"hide" tint:[UIColor blackColor]] forState:UIControlStateNormal];
+            UIImage *tintedImage = [[UIImage imageNamed:@"hide"]add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+            [sender setBackgroundImage:tintedImage forState:UIControlStateNormal];
         }
         //Animates the showing or hiding of the optionsView
         [UIView animateKeyframesWithDuration:duration delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubic animations:^{

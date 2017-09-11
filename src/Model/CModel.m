@@ -7,8 +7,8 @@
 //
 
 #import "CModel.h"
+
 #import "CDrawingView.h"
-#import "UIExtensions.h"
 #import <CoreData/CoreData.h>
 
 #define DRAWING_COLOR_KEY @"DCK"
@@ -29,6 +29,28 @@
 #define CAN_USE_MORE_BRUSHES @"CUMB"
 
 #define DRAWING_ENTITY_NAME @"Drawing"
+
+UIColor *UIColorFromNSString(NSString *string) {
+    //Creates a color with RGB values of the string
+    NSString *componentsString = [[string stringByReplacingOccurrencesOfString:@"[" withString:@""] stringByReplacingOccurrencesOfString:@"]" withString:@""];
+    NSArray *components = [componentsString componentsSeparatedByString:@", "];
+    return [UIColor colorWithRed:[(NSString*)components[0] floatValue]
+                           green:[(NSString*)components[1] floatValue]
+                            blue:[(NSString*)components[2] floatValue]
+                           alpha:[(NSString*)components[3] floatValue]];
+}
+
+NSString *NSStringFromUIColor(UIColor *color) {
+    if(!color) {
+        return nil;
+    }
+    const CGFloat *components = CGColorGetComponents(color.CGColor);
+    return [NSString stringWithFormat:@"[%f, %f, %f, %f]",
+            components[0],
+            components[1],
+            components[2],
+            components[3]];
+}
 
 @implementation NSArray (CModelSerialisation)
 
@@ -390,7 +412,7 @@
     return ID;
 }
 
-- (void)addDrawing:(UIImage *)drawing withTitle:(NSString *)title background:(id)background size:(CGSize)size pathArray:(NSArray *)pathArray videoPath:(NSString*)videoPath completion:(GenericBlockType)completion {
+- (void)addDrawing:(UIImage *)drawing withTitle:(NSString *)title background:(id)background size:(CGSize)size pathArray:(NSArray *)pathArray videoPath:(NSString*)videoPath completion:(void(^)())completion {
     //Creates an entity for our new drawing entry
     NSManagedObject *drawingEntry = [NSEntityDescription insertNewObjectForEntityForName:DRAWING_ENTITY_NAME inManagedObjectContext:self.managedObjectContext];
     
@@ -442,7 +464,7 @@
     completion();
 }
 
-- (void)updateDrawing:(NSString *)ID drawing:(UIImage *)drawing title:(NSString *)title background:(id)background size:(CGSize)size pathArray:(NSArray *)pathArray videoPath:videoPath completion:(GenericBlockType)completion {
+- (void)updateDrawing:(NSString *)ID drawing:(UIImage *)drawing title:(NSString *)title background:(id)background size:(CGSize)size pathArray:(NSArray *)pathArray videoPath:videoPath completion:(void(^)())completion {
     NSError *objectError;
     NSMutableArray *fetchedObjectArray = [[self getEntryObjectForName:DRAWING_ENTITY_NAME error:&objectError predicate:[NSPredicate predicateWithFormat:@"fileID == %@", ID]]mutableCopy];
     if(objectError) {
@@ -503,7 +525,7 @@
     completion();
 }
 
-- (void)removeDrawingWithID:(NSString *)ID completion:(GenericBlockType)completion {
+- (void)removeDrawingWithID:(NSString *)ID completion:(void(^)())completion {
     NSManagedObject *managedObject;
     //Gets the managed object for the ID specified
     for (NSManagedObject *object in self.source) {
@@ -612,7 +634,7 @@
     
     NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
     if (coordinator != nil) {
-        _managedObjectContext = [[NSManagedObjectContext alloc] init];
+        _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         [_managedObjectContext setPersistentStoreCoordinator:coordinator];
     }
     return _managedObjectContext;
@@ -624,7 +646,7 @@
     if (_managedObjectModel != nil) {
         return _managedObjectModel;
     }
-    NSURL *modelURL = [[NSBundle mainBundle] URLForResource:@"Data" withExtension:@"momd"];
+    NSURL *modelURL = [[NSBundle mainBundle] URLForResource:@"Canvas" withExtension:@"momd"];
     _managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
     return _managedObjectModel;
 }

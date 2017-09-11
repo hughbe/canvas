@@ -7,10 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "UIExtensions.h"
 #import "CDrawingView.h"
 
 #define LINE_CAP_CHANGED_NOTIFICATION_NAME @"LCCN"
+
+UIColor *UIColorFromNSString(NSString *string);
+NSString *NSStringFromUIColor(UIColor *color);
 
 @interface NSArray (CModelSerialisation)
 
@@ -23,9 +25,9 @@
 
 @property (strong, nonatomic) NSMutableArray *source;
 
-- (void)addDrawing:(UIImage*)drawing withTitle:(NSString*)title background:(id)background  size:(CGSize)size pathArray:(NSArray*)pathArray videoPath:videoPath completion:(GenericBlockType)completion;
-- (void)updateDrawing:(NSString*)ID drawing:(UIImage*)drawing title:(NSString*)title background:(id)background size:(CGSize)size pathArray:(NSArray*)pathArray videoPath:videoPath completion:(GenericBlockType)completion;
-- (void)removeDrawingWithID:(NSString *)ID completion:(GenericBlockType)completion;
+- (void)addDrawing:(UIImage*)drawing withTitle:(NSString*)title background:(id)background  size:(CGSize)size pathArray:(NSArray*)pathArray videoPath:videoPath completion:(void(^)())completion;
+- (void)updateDrawing:(NSString*)ID drawing:(UIImage*)drawing title:(NSString*)title background:(id)background size:(CGSize)size pathArray:(NSArray*)pathArray videoPath:videoPath completion:(void(^)())completion;
+- (void)removeDrawingWithID:(NSString *)ID completion:(void(^)())completion;
 
 - (void)loadSource;
 - (NSNumber*)getNewID;

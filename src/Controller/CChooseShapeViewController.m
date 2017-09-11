@@ -7,8 +7,8 @@
 //
 
 #import "CChooseShapeViewController.h"
+
 #import "CShapeCell.h"
-#import "UIExtensions.h"
 #import "CModel.h"
 
 @interface CChooseShapeViewController()

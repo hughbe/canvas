@@ -7,7 +7,7 @@
 //
 
 #import "CDrawingView.h"
-#import "UIExtensions.h"
+
 #import "CModel.h"
 #import <objc/runtime.h>
 
@@ -34,6 +34,19 @@ void MyCGPathApplierFunc (void *info, const CGPathElement *element);
 @property (nonatomic, strong) NSMutableArray *completeArray;
 
 @end
+
+CGFloat CGHypot(CGFloat p1, CGFloat p2) {
+    if(CGFLOAT_IS_DOUBLE) {
+        return (CGFloat) hypot(p1, p2);
+    }
+    else {
+        return hypotf(p1, p2);
+    }
+};
+
+CGFloat CGPointDistanceFromPoint(CGPoint p1, CGPoint p2) {
+    return CGHypot(p1.x - p2.x, p1.y - p2.y);
+}
 
 @implementation CDrawingView
 
@@ -102,7 +115,8 @@ void MyCGPathApplierFunc (void *info, const CGPathElement *element);
         //[[UIColor clearColor] setStroke];
         UIImageView *imageView = (UIImageView*)self.incrementalView.superview;
         if(imageView.image) {
-            [[imageView.image patternColor]setStroke];
+            UIColor *color = [UIColor colorWithPatternImage:imageView.image];
+            [color setStroke];
         }
         else {
             [self.incrementalView.superview.backgroundColor setStroke];
@@ -134,7 +148,8 @@ void MyCGPathApplierFunc (void *info, const CGPathElement *element);
         if(currentPath.color == [UIColor clearColor]) {
             UIImageView *imageView = (UIImageView*)self.incrementalView.superview;
             if(imageView.image) {
-                [[imageView.image patternColor]setStroke];
+                UIColor *color = [UIColor colorWithPatternImage:imageView.image];
+                [color setStroke];
             }
             else {
                 [self.incrementalView.superview.backgroundColor setStroke];
@@ -244,14 +259,14 @@ BOOL movingLine;
             return;
         }
         
-        GenericBlockType moveLineEnd = ^{
+        void(^moveLineEnd)() = ^{
             //Straight lines can only have start and end (start is always fixed)
             [self.path removeAllPoints];
             [self.path moveToPoint:self.firstPoint];
             [self.path addLineToPoint:p];
         };
         
-        GenericBlockType moveLine = ^{
+        void(^moveLine)() = ^{
            // p.x += self.path.bounds.size.width / 2;
            // p.y += self.path.bounds.size.height / 2;
             CGPathRef path = self.path.CGPath;
@@ -263,7 +278,7 @@ BOOL movingLine;
             CGPathRelease(path);
         };
         
-        GenericBlockType sizeShape = ^{
+        void(^sizeShape)() = ^{
             //FIXME
             /*CGRect frame = CGRectMake(0, 0, MAX(self.firstPoint.x, p.x) - MIN(self.firstPoint.x, p.x), MAX(self.firstPoint.y, p.y) - MIN(self.firstPoint.y, p.y));
             CGAffineTransform transform = CGAffineTransformTranslate(CGAffineTransformIdentity, MIN(self.firstPoint.x, p.x), MIN(self.firstPoint.y, p.y));
@@ -278,7 +293,7 @@ BOOL movingLine;
              */
         };
         
-        GenericBlockType moveShape = ^{
+        void(^moveShape)() = ^{
             CGPathRef path = self.path.CGPath;
             CGAffineTransform transform = CGAffineTransformTranslate(CGAffineTransformIdentity, p.x - self.controlPoint.x, p.y - self.controlPoint.y);
             self.controlPoint = p;
@@ -563,7 +578,8 @@ void MyCGPathApplierFunc (void *info, const CGPathElement *element) {
     }
     else if(self.brushPatternType != CBrushPatternNormal && self.brushType != CBrushTypeEraser) {
         NSString *fileName = [CModel fileNameForBrushPatternType:self.brushPatternType];
-        self.path.color = [[UIImage imageNamed:fileName]patternColor];
+        UIImage *image = [UIImage imageNamed:fileName];
+        self.path.color = [UIColor colorWithPatternImage:image];
     }
 }
 

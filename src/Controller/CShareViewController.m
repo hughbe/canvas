@@ -9,9 +9,9 @@
 @import Social;
 
 #import "CShareViewController.h"
-#import "UIExtensions.h"
+
 #import "CModel.h"
-#import "MBProgressHUDHelpers.h"
+#import "MBProgressHUD.h"
 
 @interface CShareViewController ()
 
@@ -24,21 +24,29 @@
 }
 
 - (IBAction)showSupportAndSuggestions:(id)sender {
-    [[UIApplication sharedApplication]openURL:[NSURL URLWithString:@"https://hughbellamyapps.wufoo.com/forms/canvas-support-and-suggestions/"]];
+    NSURL *url = [NSURL URLWithString:@"https://hughbellamyapps.wufoo.com/forms/canvas-support-and-suggestions/"];
+    [[UIApplication sharedApplication]openURL:url options:@{} completionHandler:nil];
 }
 
 - (IBAction)reviewOnAppStore:(id)sender {
     SKStoreProductViewController *storeKitProductViewController = [[SKStoreProductViewController alloc]init];
-    [self showHUDWithText:@"Loading" isNetwork:true];
+
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.label.text = @"Loading";
+
+    [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:YES];
+    
     storeKitProductViewController.delegate = self;
     [storeKitProductViewController loadProductWithParameters:@{SKStoreProductParameterITunesItemIdentifier: @"777551805"} completionBlock:^(BOOL result, NSError *error) {
         if (error) {
             NSLog(@"%@", error);
-            [self hideHUD: true];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+            [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:NO];
         }
         else {
             [self.controller presentViewController:storeKitProductViewController animated:YES completion:^{
-                [self hideHUD: true];
+                [MBProgressHUD hideHUDForView:self.view animated:YES];
+                [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:NO];
             }];
         }
     }];
@@ -72,9 +80,12 @@
     NSString *content = @"Canvas is a new app on iOS devices. It is fully customizable and has loads of features not found on any other apps. Try it out <a href = 'http://bit.ly/1aVgU62'>here </a> ";
     
     [picker setMessageBody:content isHTML:YES];
-    [self showHUDWithText:@"Loading" isNetwork:false];
+    
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.label.text = @"Loading";
+
     [self.controller presentViewController:picker animated:YES completion:^{
-        [self hideHUD:false];
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
     }];
 }
 
@@ -86,22 +97,28 @@
         controller.body = content;
         controller.recipients = nil;
         controller.messageComposeDelegate = self;
-        [self showHUDWithText:@"Loading" isNetwork:false];
+        
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        hud.label.text = @"Loading";
+        
         [self.controller presentViewController:controller animated:YES completion:^{
-            [self hideHUD:false];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
         }];
     }
     else {
-        [UIAlertView showWithTitle:@"Error" message:@"Your device cannot send messages" completion:NULL style:UIAlertViewStyleDefault cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error" message:@"Your device cannot send messages" preferredStyle:UIAlertControllerStyleAlert];
+        [self presentViewController:alert animated:YES completion:nil];
     }
 }
 
 - (void)presentSocialSheet:(NSString*)serviceType {
     SLComposeViewController *sheet = [SLComposeViewController composeViewControllerForServiceType:serviceType];
     [sheet setInitialText:@"Canvas is a great new drawing app with a ton of features. Download it here: http://bit.ly/1aVgU62"];
-    [self showHUDWithText:@"Loading" isNetwork:false];
+    
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.label.text = @"Loading";
     [self.controller presentViewController:sheet animated:YES completion:^{
-        [self hideHUD:false];
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
     }];
 }
 @end

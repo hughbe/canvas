@@ -7,7 +7,9 @@
 //
 
 #import "CChooseBlendModeViewController.h"
+
 #import "CModel.h"
+#import "UIImage+Additions.h"
 
 @interface CChooseBlendModeViewController ()
 
@@ -18,7 +20,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    [self.tickButton tintBackgroundImageWithColor:[UIColor whiteColor]];
+    UIImage *tintedImage = [self.tickButton.currentBackgroundImage add_tintedImageWithColor:[UIColor whiteColor] style:ADDImageTintStyleOverAlpha];
+    [self.tickButton setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 
 - (void)viewWillAppear:(BOOL)animated {

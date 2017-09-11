@@ -1,5 +1,5 @@
 //
-//  CAppDelegate.h
+//  AppDelegate.h
 //  canvas
 //
 //  Created by Hugh Bellamy on 09/12/2013.
@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface CAppDelegate : UIResponder <UIApplicationDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property(strong, nonatomic) UIWindow *window;
 

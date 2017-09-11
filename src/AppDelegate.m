@@ -1,19 +1,19 @@
 //
-//  CAppDelegate.m
+//  AppDelegate.m
 //  canvas
 //
 //  Created by Hugh Bellamy on 09/12/2013.
 //  Copyright (c) 2013 Hugh Bellamy. All rights reserved.
 //
 
-#import "CAppDelegate.h"
+#import "AppDelegate.h"
 #import "WYPopoverController.h"
 
-@implementation CAppDelegate
+@implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-    [[UITextField appearanceWhenContainedIn:[UISearchBar class], nil] setFont:[UIFont fontWithName:@"Arial" size:14.0]];
+    [[UITextField appearanceWhenContainedInInstancesOfClasses:@[[UISearchBar class]]] setFont:[UIFont fontWithName:@"Arial" size:14.0]];
 
     UIColor *greenColor = [UIColor colorWithRed:26.f / 255.f green:188.f / 255.f blue:156.f / 255.f alpha:1];
     WYPopoverBackgroundView *popoverAppearance = [WYPopoverBackgroundView appearance];

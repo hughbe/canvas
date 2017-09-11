@@ -7,7 +7,8 @@
 //
 
 #import "CShapeCell.h"
-#import "UIExtensions.h"
+
+#import "UIView+Borders.h"
 
 @implementation CShapeCell
 
@@ -25,7 +26,7 @@
     self.titleLabel.superview.layer.shadowOpacity = .5f;
     self.titleLabel.superview.layer.shadowRadius = 10.0f;
     
-    [self.titleLabel.superview addBottomBorderWithWidth:2.0 color:[UIColor darkGrayColor]];
+    [self.titleLabel.superview addBottomBorderWithHeight:2.0 andColor:[UIColor darkGrayColor]];
 }
 
 @end

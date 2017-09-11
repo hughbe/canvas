@@ -7,9 +7,9 @@
 //
 
 @import AVFoundation;
+@import AVKit;
 @import CoreMedia;
 @import MediaPlayer;
-@import AVFoundation;
 
 #import "CDrawingViewController.h"
 
@@ -18,10 +18,11 @@
 
 #import "CShapeCell.h"
 
+#import "UIImage+Additions.h"
+#import "UIView+Borders.h"
+#import "WBErrorNoticeView.h"
+#import "WBSuccessNoticeView.h"
 #import "WYPopoverController.h"
-
-#import "UIExtensions.h"
-#import "WBNoticeViewHelpers.h"
 
 @interface CDrawingViewController ()
 
@@ -31,7 +32,8 @@
 @property (nonatomic, strong) UIImagePickerController *imagePicker;
 
 @property (strong, nonatomic) WYPopoverController *sizePopover;
-@property (strong, nonatomic) MPMoviePlayerController *player;
+@property (strong, nonatomic) AVPlayer *player;
+@property (strong, nonatomic) AVPlayerLayer *playerLayer;
 
 
 @property (strong, nonatomic) UIImage *backupImage;
@@ -65,14 +67,18 @@
     self.undoButton.enabled = NO;
     self.redoButton.enabled = NO;
     
-    [self.cancelButton tintBackgroundImageWithColor:[UIColor blackColor]];
-    [self.confirmButton tintBackgroundImageWithColor:[UIColor colorWithRed:14.0/255 green:179.0/255 blue:44.0/255 alpha:1.0]];
+    UIImage *cancelImage = [self.cancelButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+    [self.cancelButton setBackgroundImage:cancelImage forState:UIControlStateNormal];
+    
+    UIImage *confirmImage = [self.confirmButton.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+    [self.confirmButton setBackgroundImage:confirmImage forState:UIControlStateNormal];
     
     //Sets up our UI
     [self hideAll];
-    [self.drawingToolbar addBottomBorderWithWidth:1.0 color:[UIColor darkGrayColor]];
-    [self.opacityLineWidthToolbar addBottomBorderWithWidth:1.0 color:[UIColor darkGrayColor]];
-    [self.shapeBackgroundToolbar addBottomBorderWithWidth:1.0 color:[UIColor darkGrayColor]];
+    
+    [self.drawingToolbar addBottomBorderWithHeight:1.0 andColor:[UIColor darkGrayColor]];
+    [self.opacityLineWidthToolbar addBottomBorderWithHeight:1.0 andColor:[UIColor darkGrayColor]];
+    [self.shapeBackgroundToolbar addBottomBorderWithHeight:1.0 andColor:[UIColor darkGrayColor]];
     
     //Sets up our scrollView to not scroll immediately
     self.containerView.delegate = self;
@@ -118,7 +124,8 @@
     
     self.drawingBackgroundView.contentMode = UIViewContentModeScaleAspectFit;
     
-    [self.playButton setBackgroundImage:[UIImage tintedImageNamed:@"play" tint:[UIColor blueColor]] forState:UIControlStateNormal];
+    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+    [self.playButton setBackgroundImage:playImage forState:UIControlStateNormal];
      
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(lineCapChanged:) name:LINE_CAP_CHANGED_NOTIFICATION_NAME object:nil];
     
@@ -137,8 +144,10 @@
 
 - (void)stop {
     self.brushView.hidden = NO;
-    [self.playButton setBackgroundImage:[UIImage tintedImageNamed:@"play" tint:[UIColor blueColor]] forState:UIControlStateNormal];
-    [self.player.view removeFromSuperview];
+    
+    UIImage *playImage = [[UIImage imageNamed:@"play"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+    [self.playButton setBackgroundImage:playImage forState:UIControlStateNormal];
+    [self.playerLayer removeFromSuperlayer];
     self.player = nil;
     self.drawingIncrementalView.userInteractionEnabled = YES;
     self.playButton.tag = 0;
@@ -150,7 +159,8 @@
 
 - (WYPopoverController*)sizePopover {
     if(!_sizePopover) {
-        UINavigationController *navigationController = [[UIStoryboard mainStoryboard] instantiateViewControllerWithIdentifier:@"size"];
+        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
+        UINavigationController *navigationController = [storyboard instantiateViewControllerWithIdentifier:@"size"];
         navigationController.preferredContentSize = CGSizeMake(self.view.frame.size.width, 260);
         
         CSizeViewController *sizeViewController = (CSizeViewController*)navigationController.topViewController;
@@ -195,7 +205,7 @@
     //Update our size
     [self.sizePopover dismissPopoverAnimated:YES];
     
-    GenericBlockType changeSize = ^(){
+    void(^changeSize)() = ^(){
         self.width = width;
         self.height = height;
         [self prepareFrames];
@@ -204,13 +214,18 @@
     };
     
     if(width < self.width || height < self.height) {
-        [UIAlertView showWithTitle:@"Change Size" message:@"Your chosen size is smaller than your current size. Your drawing may be cut off if you proceed with this resize" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-            if(buttonIndex != alertView.cancelButtonIndex) {
-                //Proceed
-                changeSize();
-            }
-            
-        } style:UIAlertViewStyleDefault cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Change Size" message:@"Your chosen size is smaller than your current size. Your drawing may be cut off if you proceed with this resize" preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *resize = [UIAlertAction actionWithTitle:@"Resize" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            changeSize();
+        }];
+        
+        UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+        
+        [alert addAction:resize];
+        [alert addAction:cancel];
+        
+        [self presentViewController:alert animated:YES completion:nil];
     }
     else {
         changeSize();
@@ -249,65 +264,96 @@
 
 - (IBAction)download:(id)sender {
     //Writes this drawing to the savedAlbums and notifies the user
-    [UIAlertView showWithTitle:@"Save Drawing" message:@"Do you want to save this drawing to your Phot Library?" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-        if(buttonIndex != alertView.cancelButtonIndex) {
-            UIImage *image = [self.drawingView renderImageWithContainer:self.containerView opaque:self.containerView.opaque];
-            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
-            [self showSuccessNoticeWithTitle:@"Saved to Photo Library"];
-        }
-    } style:UIAlertViewStyleDefault cancelButtonTitle:@"No" otherButtonTitles:@"Save", nil];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Save Drawing" message:@"Do you want to save this drawing to your Photo Library?" preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        UIImage *image = [self.drawingView renderImageWithContainer:self.containerView opaque:self.containerView.opaque];
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+        
+        WBSuccessNoticeView *noticeView = [WBSuccessNoticeView successNoticeInView:self.view title:@"Saved to Photo Library"];
+        [noticeView show];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"No" style:UIAlertActionStyleCancel handler:nil];
+    
+    [alert addAction:save];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (IBAction)cancel:(id)sender {
     //Shows a confirmation to the user and then cancels the drawing
-    [UIAlertView showWithTitle:@"Cancel" message:@"Abandon your art? Unsaved changes will be lost" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-        if(buttonIndex != alertView.cancelButtonIndex) {
-            [self.navigationController popViewControllerAnimated:YES];
-        }
-    } style:UIAlertViewStyleDefault cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Cancel" message:@"Abandon your art? Unsaved changes will be lost?" preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *abandon = [UIAlertAction actionWithTitle:@"Abandon" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Don't Abandon" style:UIAlertActionStyleCancel handler:nil];
+    
+    [alert addAction:abandon];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (IBAction)confirm:(id)sender {
     //Shows a alertView with textField to the user asking for a title for the artwork
-    [UIAlertView showWithTitle:@"Choose a Title" message:@"Choose your artwork's title" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-        if(buttonIndex != alertView.cancelButtonIndex) {
-            if([[alertView textFieldAtIndex:0].text isEqualToString:@""]) {
-                [self.containerView showErrorNoticeWithTitle:@"You need a Title" message:
-                 @"Try something deep, like 'Untitled' or 'What is Life?' or 'Why will Eli never be as popular as Harry?"];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Choose a Title" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    
+    [alert addTextFieldWithConfigurationHandler:^(UITextField* textField) {
+        textField.placeholder = @"Title";
+        textField.text = self.drawingTitle;
+        
+        textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
+    }];
+    
+    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action) {
+        UITextField *titleTextField = alert.textFields[0];
+        if ([titleTextField.text isEqualToString:@""]) {
+            WBErrorNoticeView *noticeView = [WBErrorNoticeView errorNoticeInView:self.containerView title:@"You need a Title" message:@"Try something deep, like 'Untitled' or 'What is Life?'"];
+            [noticeView show];
+        } else {
+            UIImage *drawing = [self.drawingView renderImageWithContainer:self.containerView opaque:self.containerView.opaque];
+            id background;
+            if(self.drawingBackgroundView.image) {
+                background = self.drawingBackgroundView.image;
             }
             else {
-                UIImage *drawing = [self.drawingView renderImageWithContainer:self.containerView opaque:self.containerView.opaque];
-                NSString *title = [alertView textFieldAtIndex:0].text;
-                id background;
-                if(self.drawingBackgroundView.image) {
-                    background = self.drawingBackgroundView.image;
-                }
-                else {
-                    background = self.drawingBackgroundView.backgroundColor;
-                }
-                
-                [self.delegate drawingWasChosen:drawing title:title background:background size:self.drawingView.bounds.size pathArray:self.drawingView.pathArray ID:self.ID videoPath:self.videoPath];
+                background = self.drawingBackgroundView.backgroundColor;
             }
+            
+            [self.delegate drawingWasChosen:drawing title:titleTextField.text background:background size:self.drawingView.bounds.size pathArray:self.drawingView.pathArray ID:self.ID videoPath:self.videoPath];
         }
-    } style:UIAlertViewStylePlainTextInput willDisplay:^(UIAlertView *alertView) {
-        if(alertView.alertViewStyle == UIAlertViewStylePlainTextInput) {
-            [alertView textFieldAtIndex:0].text = self.drawingTitle;
-            [alertView textFieldAtIndex:0].autocapitalizationType = UITextAutocapitalizationTypeSentences;
-        }
-    } cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+    }];
     
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    
+    [alert addAction:save];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:TRUE completion:nil];
 }
 
 - (IBAction)eraseAll:(id)sender {
     //Warns the user that erasing the entire screen is permenant
     if(!self.showingAlert ) {
         self.showingAlert = YES;
-        [UIAlertView showWithTitle:@"Erase Drawing" message:@"Are you sure you wish to erase the entire drawing? This cannot be undone"  completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-            if(buttonIndex != alertView.cancelButtonIndex) {
-                self.showingAlert = NO;
-                [self.drawingView eraseAll];
-            }
-        } style:UIAlertViewStyleDefault cancelButtonTitle:@"No" otherButtonTitles:@"YES", nil];
+        
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Erase Drawing" message:@"Are you sure you wish to erase the entire drawing? This cannot be undone" preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *erase = [UIAlertAction actionWithTitle:@"Erase" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+            self.showingAlert = NO;
+            [self.drawingView eraseAll];
+        }];
+        
+        UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Don't Erase" style:UIAlertActionStyleCancel handler:nil];
+        
+        [alert addAction:erase];
+        [alert addAction:cancel];
+        
+        [self presentViewController:alert animated:YES completion:nil];
     }
     
 }
@@ -355,43 +401,54 @@
 
 - (IBAction)changeBackground:(UIBarButtonItem*)sender {
     //Show the actionSheet choosing the background source
-    [UIActionSheet showFromBarButtonItem:sender animated:YES withTitle:@"Choose Background Sources" cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@[@"Camera", @"Photo Library", @"Color"] tapBlock:^(UIActionSheet *actionSheet, NSInteger buttonIndex) {
-        if(buttonIndex == 2) {
-            //Shows Background Color
-            NSArray *array = @[NSStringFromUIColor(self.drawingBackgroundView.backgroundColor), NSStringFromUIColor([CModel defaultBackgroundColor]), @(1)];
-            [self performSegueWithIdentifier:@"color" sender:array];
-        }
-        else if(buttonIndex != actionSheet.cancelButtonIndex) {
-            //Loads our imagePicker
-            if(buttonIndex == 0) {
-                //Camera
-                //Makes sure we have a Camera
-                if(![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-                    [UIAlertView showWithTitle:@"No Camera" message:@"Your device lacks a camera" completion:nil style:UIAlertViewStyleDefault cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                    return;
-                }
-                else {
-                    self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
-                }
-            }
-            else {
-                //Photo Library
-                //Makes sure we have a Photo Library
-                if(![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
-                    [UIAlertView showWithTitle:@"No Photo Library" message:@"Your device lacks a photo library" completion:nil style:UIAlertViewStyleDefault cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                    return;
-                }
-                else {
-                    self.imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-                }
-            }
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Choose Background Sources" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction *camera = [UIAlertAction actionWithTitle:@"Camera" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action) {
+        //Makes sure we have a Camera
+        if(![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"No Camera" message:@"Your device lacks a camera" preferredStyle:UIAlertControllerStyleAlert];
             
-            //Shows the imagePicker
-            self.imagePicker.delegate = self;
-            self.imagePicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];
-            [self presentViewController:self.imagePicker animated:YES completion:nil];
+            [self presentViewController:alert animated:YES completion:nil];
+            return;
         }
+        
+        self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    
+        self.imagePicker.delegate = self;
+        self.imagePicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];
+        [self presentViewController:self.imagePicker animated:YES completion:nil];
     }];
+    
+    UIAlertAction *photoLibrary = [UIAlertAction actionWithTitle:@"Photo Library" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action) {
+        //Makes sure we have a Photo Library
+        if(![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+            
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"No Photo Library" message:@"Your device lacks a photo library" preferredStyle:UIAlertControllerStyleAlert];
+            
+            [self presentViewController:alert animated:YES completion:nil];
+            return;
+        }
+        
+        self.imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+        
+        self.imagePicker.delegate = self;
+        self.imagePicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];
+        [self presentViewController:self.imagePicker animated:YES completion:nil];
+    }];
+    
+    UIAlertAction *color = [UIAlertAction actionWithTitle:@"Color" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action) {
+        NSArray *array = @[NSStringFromUIColor(self.drawingBackgroundView.backgroundColor), NSStringFromUIColor([CModel defaultBackgroundColor]), @(1)];
+        [self performSegueWithIdentifier:@"color" sender:array];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    
+    [alert addAction:camera];
+    [alert addAction:photoLibrary];
+    [alert addAction:color];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)deleteVideoWithPath:(NSString *)path {
@@ -416,12 +473,18 @@
         self.drawingBackgroundView.image = image;
         if(picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
             //We ask the user to save the photo to the camera roll
-            [UIAlertView showWithTitle:@"Save Video" message:@"Do you want to save this photo to your camera roll?" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-                if(buttonIndex != alertView.cancelButtonIndex) {
-                    //Save
-                    UIImageWriteToSavedPhotosAlbum(image, nil, nil, NULL);
-                }
-            } style:UIAlertViewStyleDefault cancelButtonTitle:@"No" otherButtonTitles:@"YES", nil];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Save Photo" message:@"Do you want to save this photo to your camera roll?" preferredStyle:UIAlertControllerStyleAlert];
+            
+            UIAlertAction *yes = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                UIImageWriteToSavedPhotosAlbum(image, nil, nil, NULL);
+            }];
+            
+            UIAlertAction *no = [UIAlertAction actionWithTitle:@"No" style:UIAlertActionStyleCancel handler:nil];
+            
+            [alert addAction:yes];
+            [alert addAction:no];
+            
+            [self presentViewController:alert animated:YES completion:nil];
         }
         self.playButton.hidden = YES;
     }
@@ -430,17 +493,23 @@
         NSURL *filePath = info[UIImagePickerControllerMediaURL];
         if(picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
             //We ask the user to save the video to the camera roll
-            [UIAlertView showWithTitle:@"Save Video" message:@"Do you want to save this recorded video to your camera roll?" completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-                if(buttonIndex != alertView.cancelButtonIndex) {
-                    //Save
-                    if(UIVideoAtPathIsCompatibleWithSavedPhotosAlbum([filePath absoluteString])) {
-                        UISaveVideoAtPathToSavedPhotosAlbum([filePath absoluteString], nil, nil, NULL);
-                    }
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Save Video" message:@"Do you want to save this recorded video to your camera roll?" preferredStyle:UIAlertControllerStyleAlert];
+            
+            UIAlertAction *yes = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                if(UIVideoAtPathIsCompatibleWithSavedPhotosAlbum([filePath absoluteString])) {
+                    UISaveVideoAtPathToSavedPhotosAlbum([filePath absoluteString], nil, nil, NULL);
                 }
-            } style:UIAlertViewStyleDefault cancelButtonTitle:@"No" otherButtonTitles:@"YES", nil];
+            }];
+            
+            UIAlertAction *no = [UIAlertAction actionWithTitle:@"No" style:UIAlertActionStyleCancel handler:nil];
+            
+            [alert addAction:yes];
+            [alert addAction:no];
+            
+            [self presentViewController:alert animated:YES completion:nil];
         }
         
-        if(!self.videoID) {
+        if(self.videoID == nil) {
             self.videoID = [[[CModel alloc]init]getNewID];
         }
         
@@ -483,18 +552,25 @@
     if(sender.tag == 0) {
         //Play
         self.brushView.hidden = YES;
-        self.player = [[MPMoviePlayerController alloc]initWithContentURL:[NSURL fileURLWithPath:self.videoPath]];
         
-        self.player.view.frame = self.drawingBackgroundView.bounds;
-        [self.drawingBackgroundView insertSubview:self.player.view belowSubview:self.drawingIncrementalView];
+        NSURL *url = [NSURL fileURLWithPath:self.videoPath];
+        self.player = [[AVPlayer alloc]initWithURL:url];
+        
+        self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
+        self.playerLayer.frame = self.drawingBackgroundView.bounds;
+        
+        [self.drawingBackgroundView.layer addSublayer:self.playerLayer];
         [self.player play];
-        [self.playButton setBackgroundImage:[UIImage tintedImageNamed:@"stop" tint:[UIColor blueColor]] forState:UIControlStateNormal];
+        
+        UIImage *playButtonImage = [[UIImage imageNamed:@"stop"]add_tintedImageWithColor:[UIColor blueColor] style:ADDImageTintStyleOverAlpha];
+        [self.playButton setBackgroundImage:playButtonImage forState:UIControlStateNormal];
+
         sender.tag = 1;
         self.drawingIncrementalView.userInteractionEnabled = NO;
     }
     else {
         //Stop
-        [self.player stop];
+        [self.player pause];
     }
 }
 
@@ -521,16 +597,24 @@
 }
 
 - (void)removeBrushSelections {
-    [self.brushView findAllSubviewsOfClass:[UIButton class] andPerformBlock:^(UIButton *button) {
-        [button tintBackgroundImageWithColor:[UIColor blackColor]];
-    }];
+    for(UIView *view in [self.brushView.subviews copy]) {
+        if(![view isMemberOfClass:[UIButton class]]) {
+            continue;
+        }
+        
+        UIButton *button = (UIButton*)view;
+        UIImage *tintedImage = [button.currentBackgroundImage add_tintedImageWithColor:[UIColor blackColor] style:ADDImageTintStyleOverAlpha];
+        [button setBackgroundImage:tintedImage forState:UIControlStateNormal];
+    }
 }
 
 - (IBAction)changeBrushMode:(UIButton*)sender {
     //Deselects all of our brush modes
     if(sender.tag != 4) {
         [self removeBrushSelections];
-        [sender tintBackgroundImageWithColor:[UIColor redColor]];
+        
+        UIImage *sendImage = [sender.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+        [sender setBackgroundImage:sendImage forState:UIControlStateNormal];
     }
     
     if (sender.tag == 0 || sender.tag == 1) {
@@ -539,7 +623,9 @@
         if(sender.tag == 0) {
             //We're starting to erase
             sender.tag = 1;
-            [sender setBackgroundImage:[UIImage tintedImageNamed:@"erase" tint:[UIColor redColor]] forState:UIControlStateNormal];
+            
+            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            [sender setBackgroundImage:senderImage forState:UIControlStateNormal];
             
             self.drawingView.brushType = CBrushTypeEraser;
             self.drawingView.backupColor = self.drawingView.color;
@@ -548,10 +634,14 @@
         else {
             //We're no longer erasing
             sender.tag = 0;
-            [sender setBackgroundImage:[UIImage tintedImageNamed:@"erase" tint:[UIColor blackColor]] forState:UIControlStateNormal];
+            
+            UIImage *senderImage = [[UIImage imageNamed:@"erase"]add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            [sender setBackgroundImage:senderImage forState:UIControlStateNormal];
             self.drawingView.color = self.drawingView.backupColor;
             self.drawingView.brushType = CBrushTypeNormal;
-            [self.brushView.normalButton tintBackgroundImageWithColor:[UIColor redColor]];
+            
+            UIImage *normalButtonImage = [self.brushView.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+            [self.brushView.normalButton setBackgroundImage:normalButtonImage forState:UIControlStateNormal];
         }
     }
     
@@ -588,7 +678,9 @@
 -(void)choseShape:(CShapeType)shape filled:(BOOL)filled rounded:(BOOL)rounded {
     //We're in the shape mode
     [self removeBrushSelections];
-    [self.brushView.shapeButton tintBackgroundImageWithColor:[UIColor redColor]];
+    
+    UIImage *shapeImage = [self.brushView.shapeButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+    [self.brushView.shapeButton setBackgroundImage:shapeImage forState:UIControlStateNormal];
     
     self.drawingView.brushType = CBrushTypeShape;
     self.drawingView.shape = CShapeMake(shape, filled, rounded);
@@ -623,11 +715,14 @@
 - (IBAction)showOpacity:(UIButton*)button {
     //Shows that we have selected opacity
     button.tintColor = [UIColor redColor];
-    [button tintBackgroundImage];
+    self.lineWidthButton.tintColor = [UIColor blackColor];
     button.tag = -3;
     
-    self.lineWidthButton.tintColor = [UIColor blackColor];
-    [self.lineWidthButton tintBackgroundImage];
+    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleOverAlpha];
+    [button setBackgroundImage:buttonImage forState:UIControlStateNormal];
+    
+    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+    [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
     
     //Sets up our slider with the variables needed to change opacity
     self.opacityLineWidthSlider.minimumValue = 0.0f;
@@ -655,11 +750,14 @@
 - (IBAction)showLineWidth:(UIButton*)button {
     //Shows that we have selected line width
     button.tintColor = [UIColor redColor];
-    [button tintBackgroundImage];
+    self.opacityButton.tintColor = [UIColor blackColor];
     button.tag = -2;
     
-    self.opacityButton.tintColor = [UIColor blackColor];
-    [self.opacityButton tintBackgroundImage];
+    UIImage *buttonImage = [button.currentBackgroundImage add_tintedImageWithColor:button.tintColor style:ADDImageTintStyleOverAlpha];
+    [button setBackgroundImage:buttonImage forState:UIControlStateNormal];
+    
+    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+    [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
     
     //Sets up our slider with the variables needed to change line width
     self.opacityLineWidthSlider.minimumValue = 1.0f;
@@ -707,14 +805,17 @@
     }
 }
 
-- (void)hideOpacityLineWidth:(UIButton*)button speed:(CGFloat)speed completion:(GenericBlockType)completionBlock {
+- (void)hideOpacityLineWidth:(UIButton*)button speed:(CGFloat)speed completion:(void(^)())completionBlock {
     if(!self.animating) {
         //Prepares our expandedOptions view for dismissal
         self.opacityButton.tintColor = [UIColor blackColor];
-        [self.opacityButton tintBackgroundImage];
-        
         self.lineWidthButton.tintColor = [UIColor blackColor];
-        [self.lineWidthButton tintBackgroundImage];
+
+        UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+        [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
+        
+        UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+        [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
         
         self.animating = YES;
         //Animates the view up to its original position
@@ -776,7 +877,7 @@
     }];
 }
 
-- (void)hideBackgroundShape:(UIButton*)button completion:(GenericBlockType)completionBlock {
+- (void)hideBackgroundShape:(UIButton*)button completion:(void(^)())completionBlock {
     [button setBackgroundImage:[UIImage imageNamed:@"down.png"] forState:UIControlStateNormal];
     //Animates the view up from the moreOptions view
     [UIView animateKeyframesWithDuration:0.15 delay:0.0 options:UIViewKeyframeAnimationOptionCalculationModeCubic animations:^{
@@ -836,11 +937,15 @@
                 if(!self.opacityLineWidthToolbar.hidden) {
                     //If we're showing the opacityLineWidthToolbar, hide it THEN hide the whole bar
                     self.animating = YES;
-                    self.opacityButton.tintColor = [UIColor blackColor];
-                    [self.opacityButton tintBackgroundImage];
                     
+                    self.opacityButton.tintColor = [UIColor blackColor];
                     self.lineWidthButton.tintColor = [UIColor blackColor];
-                    [self.lineWidthButton tintBackgroundImage];
+                    
+                    UIImage *opacityImage = [self.opacityButton.currentBackgroundImage add_tintedImageWithColor:self.opacityButton.tintColor style:ADDImageTintStyleOverAlpha];
+                    [self.opacityButton setBackgroundImage:opacityImage forState:UIControlStateNormal];
+                    
+                    UIImage *lineWidthImage = [self.lineWidthButton.currentBackgroundImage add_tintedImageWithColor:self.lineWidthButton.tintColor style:ADDImageTintStyleOverAlpha];
+                    [self.lineWidthButton setBackgroundImage:lineWidthImage forState:UIControlStateNormal];
                     
                     [UIView animateWithDuration:0.125 animations:^{
                         CGRect frame = self.opacityLineWidthToolbar.frame;

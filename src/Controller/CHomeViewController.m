@@ -18,11 +18,10 @@
 #import "WYStoryboardPopoverSegue.h"
 #import "WYPopoverController.h"
 
-#import "MBProgressHUDHelpers.h"
-#import "WBNoticeViewHelpers.h"
+#import "MBProgressHUD.h"
+#import "WBSuccessNoticeView.h"
 
 #import "CShareViewController.h"
-#import "NSExtensions.h"
 
 @interface CHomeViewController ()
 
@@ -84,7 +83,8 @@
 - (WYPopoverController*)sizePopover {
     //Lazily instantiates our size popover
     if(!_sizePopover) {
-        UINavigationController *navigationController = [[UIStoryboard mainStoryboard] instantiateViewControllerWithIdentifier:@"size"];
+        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]];
+        UINavigationController *navigationController = [storyboard instantiateViewControllerWithIdentifier:@"size"];
         CSizeViewController *sizeViewController = (CSizeViewController*)navigationController.topViewController;
         sizeViewController.delegate = self;
         navigationController.preferredContentSize = CGSizeMake(self.view.frame.size.width, 100);
@@ -286,7 +286,12 @@
         NSManagedObject *object = self.searchedContent[indexPath.row];
         
         //Gets the date and location of our drawing
-        NSString *date = [[object valueForKey:@"date"] convertDateToStringWithFormat:@"EEEE dd MMMM yyyy"];
+        NSString *format = @"EEEE dd MMMM yyyy";
+        NSDateFormatter *formatter = [[NSDateFormatter alloc]init];
+        formatter.dateFormat = format;
+        
+        NSDate *rawDate = [object valueForKey:@"date"];
+        NSString *date = [formatter stringFromDate:rawDate];
         
         //Gets the main image of our drawing (for display)
         NSString *ID = [object valueForKey:@"fileID"];
@@ -330,8 +335,12 @@
     [self.sizePopover dismissPopoverAnimated:YES];
     
     NSArray *array = @[@(width), @(height)];
+    NSArray *tips = [CModel tips];
+    NSUInteger randomIndex = arc4random() % [tips count];
+    NSString *randomTip = tips[randomIndex];
     
-    [self showHUDWithText:[[CModel tips] randomObject] isNetwork:false];
+    MBProgressHUD *hud = [MBProgressHUD HUDForView:self.view];
+    hud.label.text = randomTip;
     
     //Send initialization of drawing interface in background
     dispatch_async(dispatch_queue_create("create", NULL), ^{
@@ -339,7 +348,8 @@
         sleep(3);
         // hide indicator and present it on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self hideHUD:false];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
             [self performSegueWithIdentifier:@"draw" sender:array];
         });
     });
@@ -368,8 +378,7 @@
             viewController.videoPath = sender[6];
         }
     }
-    else if ([segue.identifier isEqualToString:@"help"])
-    {
+    else if ([segue.identifier isEqualToString:@"help"]) {
         WYStoryboardPopoverSegue* popoverSegue = (WYStoryboardPopoverSegue*)segue;
         
         CShareViewController* destinationViewController = (CShareViewController *)segue.destinationViewController;
@@ -379,12 +388,10 @@
     }
 }
 
-- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController {
-    //[CModel writeCanUseMoreBrushes:YES];
-}
-
 - (void)drawingWasChosen:(UIImage *)drawing title:(NSString*)title background:(id)background size:(CGSize)size pathArray:(NSArray *)pathArray ID:(NSString *)ID videoPath:(NSString *)videoPath {
-    [self showHUDWithText:@"Saving..." isNetwork:false];
+    MBProgressHUD *hud = [MBProgressHUD HUDForView:self.view];
+    hud.label.text = @"Saving...";
+
     //A drawing was chosen, save it
     [self.navigationController popViewControllerAnimated:YES];
     
@@ -399,8 +406,11 @@
                     [weakModel loadSource];
                     weakSelf.searchedContent = weakModel.source;
                     [weakSelf.collectionView reloadData];
-                    [weakSelf hideHUD:false];
-                    [weakSelf showSuccessNoticeWithTitle:@"Drawing Saved"];
+                    
+                    [MBProgressHUD hideHUDForView:weakSelf.view animated:YES];
+                    
+                    WBSuccessNoticeView *noticeView = [WBSuccessNoticeView successNoticeInView:weakSelf.view title:@"Drawing Saved"];
+                    [noticeView show];
                 });
             }];
         }
@@ -411,7 +421,9 @@
                     [weakModel loadSource];
                     weakSelf.searchedContent = weakModel.source;
                     [weakSelf.collectionView reloadData];
-                    [weakSelf showSuccessNoticeWithTitle:@"Drawing Saved"];
+                    
+                    WBSuccessNoticeView *noticeView = [WBSuccessNoticeView successNoticeInView:weakSelf.view title:@"Drawing Saved"];
+                    [noticeView show];
                 });
             }];
         }
@@ -419,13 +431,15 @@
 }
 
 -(void)shareDrawing:(CCell *)cell {
-    [self showHUDWithText:@"Loading..." isNetwork:false];
+    MBProgressHUD *hud = [MBProgressHUD HUDForView:self.view];
+    hud.label.text = @"Loading...";
     
     // create new dispatch queue in background
     dispatch_async(dispatch_queue_create("shareDrawing", NULL), ^{
         UIActivityViewController *activityViewController = [[UIActivityViewController alloc]initWithActivityItems:@[cell.titleLabel.text, cell.imageView.image] applicationActivities:nil];
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self hideHUD: false];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+            
             [self presentViewController:activityViewController animated:YES completion:nil];
         });
     });
@@ -437,7 +451,8 @@
     
     //Sets the background (type variable) for editing
     id background;
-    NSString *backgroundString = [object valueForKey:@"background"];    NSString *backgroundType = [backgroundString substringToIndex:1];
+    NSString *backgroundString = [object valueForKey:@"background"];
+    NSString *backgroundType = [backgroundString substringToIndex:1];
     
     if([backgroundType isEqualToString:@"c"]) {
         //Color background
@@ -452,13 +467,15 @@
     
     NSArray *sender = @[@(cell.size.width), @(cell.size.height), background, cell.titleLabel.text, cell.ID, cell.pathArray, cell.videoPath];
     
-    [self showHUDWithText:@"Editing..." isNetwork:false];
+    MBProgressHUD *hud = [MBProgressHUD HUDForView:self.view];
+    hud.label.text = @"Editing...";
     
     //Sends initialization of drawing interface in background
     dispatch_async(dispatch_queue_create("editImage", NULL), ^{
         //When drawing interface is finally initialized, hides the indicator and present it on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self hideHUD:false];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
             [self performSegueWithIdentifier:@"draw" sender:sender];
         });
     });
@@ -466,17 +483,25 @@
 
 - (void)deleteDrawing:(CCell *)cell {
     //Tell the model to remove the drawing then delete it from our collectionView
-    [UIActionSheet showInView:self.view withTitle:@"Deletion is permenant" cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Delete" otherButtonTitles:nil tapBlock:^(UIActionSheet *actionSheet, NSInteger buttonIndex) {
-        if(buttonIndex == actionSheet.destructiveButtonIndex) {
-            //Delete
-            [self.model removeDrawingWithID:cell.ID completion:^{
-                self.searchedContent = self.model.source;
-                NSIndexPath *indexPath = [self.collectionView indexPathForCell:cell];
-                self.deleting = YES;
-                [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
-            }];
-        }
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Deletion is permenant"  message:@"Please confirm." preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* delete = [UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+        //Delete
+        [self.model removeDrawingWithID:cell.ID completion:^{
+            self.searchedContent = self.model.source;
+            NSIndexPath *indexPath = [self.collectionView indexPathForCell:cell];
+            self.deleting = YES;
+            [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
+        }];
     }];
+    
+    UIAlertAction* cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+    }];
+    
+    [alert addAction:delete];
+    [alert addAction:cancel];
+    
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)expandedDrawing:(CCell *)cell {

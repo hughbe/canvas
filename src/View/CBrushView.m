@@ -7,7 +7,8 @@
 //
 
 #import "CBrushView.h"
-#import "UIExtensions.h"
+
+#import "UIImage+Additions.h"
 
 @implementation CBrushView
 
@@ -16,7 +17,9 @@
     
     self.layer.borderWidth = 2.0;
     self.layer.cornerRadius = 10.0;
-    [self.normalButton tintBackgroundImageWithColor:[UIColor redColor]];
+    
+    UIImage *tintedImage = [self.normalButton.currentBackgroundImage add_tintedImageWithColor:[UIColor redColor] style:ADDImageTintStyleOverAlpha];
+    [self.normalButton setBackgroundImage:tintedImage forState:UIControlStateNormal];
 }
 
 @end

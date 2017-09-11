@@ -10,13 +10,12 @@
 
 #import "CModel.h"
 #import "CShapeCell.h"
-#import "UIExtensions.h"
 #import "CBrushTypeReusableView.h"
 
 #import "WYStoryboardPopoverSegue.h"
 
-#import "MBProgressHUDHelpers.h"
-#import "WBNoticeViewHelpers.h"
+#import "MBProgressHUD.h"
+#import "WBSuccessNoticeView.h"
 
 @interface CChooseBrushViewController ()
 
@@ -36,28 +35,42 @@
 }
 
 - (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
     if(![CModel canUseMoreBrushes]) {
-        [UIAlertView showWithTitle:@"Extra Features" message:@"Brush textures, shapes and blend modes are premium features. To access these without pay, please give an honest review of Canvas on the app store. It is simple and only takes half a minute, thank you." completion:^(UIAlertView *alertView, NSInteger buttonIndex) {
-            if(buttonIndex == alertView.cancelButtonIndex) {
-                [self.navigationController popViewControllerAnimated:YES];
-            }
-            else {
-                SKStoreProductViewController *storeKitProductViewController = [[SKStoreProductViewController alloc]init];
-                [self showHUDWithText:@"Loading" isNetwork:true];
-                storeKitProductViewController.delegate = self;
-                [storeKitProductViewController loadProductWithParameters:@{SKStoreProductParameterITunesItemIdentifier: @"777551805"} completionBlock:^(BOOL result, NSError *error) {
-                    if (error) {
-                        NSLog(@"%@", error);
-                        [self hideHUD:false];
-                    }
-                    else {
-                        [self presentViewController:storeKitProductViewController animated:YES completion:^{
-                            [self hideHUD:false];
-                        }];
-                    }
-                }];
-            }
-        } style:UIAlertViewStyleDefault cancelButtonTitle:@"Cancel" otherButtonTitles:@"Review", nil];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Extra Features"  message:@"Brush textures, shapes and blend modes are premium features. To access these without pay, please give an honest review of Canvas on the app store. It is simple and only takes half a minute, thank you." preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction* review = [UIAlertAction actionWithTitle:@"Review" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            SKStoreProductViewController *storeKitProductViewController = [[SKStoreProductViewController alloc]init];
+            
+            MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+            hud.label.text = @"Loading";
+            
+            [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:YES];
+            
+            storeKitProductViewController.delegate = self;
+            [storeKitProductViewController loadProductWithParameters:@{SKStoreProductParameterITunesItemIdentifier: @"777551805"} completionBlock:^(BOOL result, NSError *error) {
+                if (error) {
+                    NSLog(@"%@", error);
+                    [MBProgressHUD hideHUDForView:self.view animated:YES];
+                    [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:NO];
+                }
+                else {
+                    [self presentViewController:storeKitProductViewController animated:YES completion:^{
+                        [MBProgressHUD hideHUDForView:self.view animated:YES];
+                        [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:NO];
+                    }];
+                }}];
+        }];
+        
+        UIAlertAction* cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self.navigationController popViewControllerAnimated:YES];
+        }];
+        
+        [alert addAction:review];
+        [alert addAction:cancel];
+        
+        [self presentViewController:alert animated:YES completion:nil];
     }
 }
 
@@ -110,7 +123,10 @@
     else {
         if(patternType != CBrushPatternNormal) {
             NSString *fileName = [CModel fileNameForBrushPatternType:patternType];
-            cell.view.backgroundColor = [[UIImage imageNamed:fileName] patternColor];
+            UIImage *image = [UIImage imageNamed:fileName];
+            UIColor *color = [UIColor colorWithPatternImage:image];
+            
+            cell.view.backgroundColor = color;
         }
         else {
             cell.view.backgroundColor = [UIColor blackColor];
@@ -130,30 +146,28 @@
 
 - (void)productViewControllerDidFinish:(SKStoreProductViewController *)viewController {
     [CModel writeCanUseMoreBrushes:YES];
-    [self showSuccessNoticeWithTitle:@"Thanks for taking your time to rate Canvas. All feedback is appreciated"];
+    
+    WBSuccessNoticeView *successNoticeView = [WBSuccessNoticeView successNoticeInView:self.view title:@"Thanks for taking your time to rate Canvas. All feedback is appreciated"];
+    [successNoticeView show];
 }
 
-- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
-{
-    UICollectionReusableView *reusableview = nil;
-    if(!reusableview) {
-        if (kind == UICollectionElementKindSectionHeader) {
-            CBrushTypeReusableView *headerView = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"topBar" forIndexPath:indexPath];
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath {
+    if (kind == UICollectionElementKindSectionHeader) {
+        CBrushTypeReusableView *headerView = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"topBar" forIndexPath:indexPath];
             
-            if([CModel lineCapStyle] == kCGLineCapRound) {
-                //We have a rounded brush
-                [headerView.lineCapControl setSelectedSegmentIndex:0];
-                
-            }
-            else {
-                //We have a squared brush
-                [headerView.lineCapControl setSelectedSegmentIndex:1];
-            }
-            
-            reusableview = headerView;
+        if([CModel lineCapStyle] == kCGLineCapRound) {
+            //We have a rounded brush
+            [headerView.lineCapControl setSelectedSegmentIndex:0];
         }
+        else {
+            //We have a squared brush
+            [headerView.lineCapControl setSelectedSegmentIndex:1];
+        }
+            
+        return headerView;
     }
-    return reusableview;
+    
+    return nil;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
