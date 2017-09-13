@@ -1,18 +1,16 @@
 //
 //  main.m
-//  canvas
+//  Canvas
 //
-//  Created by Hugh Bellamy on 09/12/2013.
-//  Copyright (c) 2013 Hugh Bellamy. All rights reserved.
+//  Created by Hugh Bellamy on 11/09/2017.
+//  Copyright © 2017 Hugh Bellamy. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
+#import "AppDelegate.h"
 
-#import "CAppDelegate.h"
-
-int main(int argc, char * argv[])
-{
+int main(int argc, char * argv[]) {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([CAppDelegate class]));
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }
 }

@@ -375,8 +375,6 @@
 				1E2FE4311F66B7FE0052C6D1 /* CDrawingView.m */,
 				1E2FE4321F66B7FE0052C6D1 /* CShapeCell.h */,
 				1E2FE4331F66B7FE0052C6D1 /* CShapeCell.m */,
-				1EBA1C981F66D261009B8067 /* Main_iPad.storyboard */,
-				1EBA1C9A1F66D261009B8067 /* Main.storyboard */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -585,6 +583,16 @@
 			path = Control;
 			sourceTree = "<group>";
 		};
+		1ED22CFB1F6921D800A8EEE3 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				1EBA1C981F66D261009B8067 /* Main_iPad.storyboard */,
+				1EBA1C9A1F66D261009B8067 /* Main.storyboard */,
+				1ED415A51F66B7A00070285F /* LaunchScreen.storyboard */,
+			);
+			name = UI;
+			sourceTree = "<group>";
+		};
 		1ED415881F66B7A00070285F = {
 			isa = PBXGroup;
 			children = (
@@ -606,14 +614,11 @@
 		1ED415931F66B7A00070285F /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
+				1ED22CFB1F6921D800A8EEE3 /* UI */,
 				1E2FE4091F66B7E80052C6D1 /* Controller */,
 				1E2FE4221F66B7F60052C6D1 /* Model */,
 				1E2FE4291F66B7FE0052C6D1 /* View */,
-				1ED415971F66B7A00070285F /* AppDelegate.h */,
-				1ED415981F66B7A00070285F /* AppDelegate.m */,
 				1ED415A31F66B7A00070285F /* Assets.xcassets */,
-				1ED415A51F66B7A00070285F /* LaunchScreen.storyboard */,
-				1ED415A81F66B7A00070285F /* Info.plist */,
 				1ED415941F66B7A00070285F /* Supporting Files */,
 			);
 			name = Canvas;
@@ -623,9 +628,12 @@
 		1ED415941F66B7A00070285F /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				1ED415971F66B7A00070285F /* AppDelegate.h */,
+				1ED415981F66B7A00070285F /* AppDelegate.m */,
+				1ED415A81F66B7A00070285F /* Info.plist */,
 				1ED415951F66B7A00070285F /* main.m */,
 			);
-			name = "Supporting Files";
+			path = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		E08C4E210D1C02931B503794 /* Frameworks */ = {
@@ -911,6 +919,7 @@
 				1EBA1C991F66D261009B8067 /* Base */,
 			);
 			name = Main_iPad.storyboard;
+			path = View;
 			sourceTree = "<group>";
 		};
 		1EBA1C9A1F66D261009B8067 /* Main.storyboard */ = {
@@ -919,6 +928,7 @@
 				1EBA1C9B1F66D261009B8067 /* Base */,
 			);
 			name = Main.storyboard;
+			path = View;
 			sourceTree = "<group>";
 		};
 		1ED415A51F66B7A00070285F /* LaunchScreen.storyboard */ = {
@@ -927,6 +937,7 @@
 				1ED415A61F66B7A00070285F /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			path = UI;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1031,7 +1042,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEVELOPMENT_TEAM = 998TJ8ABD3;
-				INFOPLIST_FILE = "$(SRCROOT)/src/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/src/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hughbellamy.Canvas;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1045,7 +1056,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEVELOPMENT_TEAM = 998TJ8ABD3;
-				INFOPLIST_FILE = "$(SRCROOT)/src/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/src/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hughbellamy.Canvas;
 				PRODUCT_NAME = "$(TARGET_NAME)";
