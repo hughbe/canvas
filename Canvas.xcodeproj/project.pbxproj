@@ -139,6 +139,7 @@
 		1EBA1DA41F66D2FA009B8067 /* undo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1EBA1D241F66D2FA009B8067 /* undo@2x.png */; };
 		1EBA1DA51F66D2FA009B8067 /* up.png in Resources */ = {isa = PBXBuildFile; fileRef = 1EBA1D251F66D2FA009B8067 /* up.png */; };
 		1EBA1DA61F66D2FA009B8067 /* up@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1EBA1D261F66D2FA009B8067 /* up@2x.png */; };
+		1ED22CFF1F6922C200A8EEE3 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ED22CFD1F6922C200A8EEE3 /* Localizable.strings */; };
 		1ED415961F66B7A00070285F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ED415951F66B7A00070285F /* main.m */; };
 		1ED415991F66B7A00070285F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ED415981F66B7A00070285F /* AppDelegate.m */; };
 		1ED415A21F66B7A00070285F /* Canvas.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1ED415A01F66B7A00070285F /* Canvas.xcdatamodeld */; };
@@ -294,6 +295,7 @@
 		1EBA1D241F66D2FA009B8067 /* undo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "undo@2x.png"; sourceTree = "<group>"; };
 		1EBA1D251F66D2FA009B8067 /* up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = up.png; sourceTree = "<group>"; };
 		1EBA1D261F66D2FA009B8067 /* up@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "up@2x.png"; sourceTree = "<group>"; };
+		1ED22CFE1F6922C200A8EEE3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Localizable.strings; sourceTree = "<group>"; };
 		1ED415911F66B7A00070285F /* Canvas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Canvas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1ED415951F66B7A00070285F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1ED415971F66B7A00070285F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -586,11 +588,21 @@
 		1ED22CFB1F6921D800A8EEE3 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				1ED22CFC1F6922A800A8EEE3 /* base.lproj */,
+			);
+			name = UI;
+			sourceTree = "<group>";
+		};
+		1ED22CFC1F6922A800A8EEE3 /* base.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				1ED22CFD1F6922C200A8EEE3 /* Localizable.strings */,
 				1EBA1C981F66D261009B8067 /* Main_iPad.storyboard */,
 				1EBA1C9A1F66D261009B8067 /* Main.storyboard */,
 				1ED415A51F66B7A00070285F /* LaunchScreen.storyboard */,
 			);
-			name = UI;
+			name = base.lproj;
+			path = UI/Base.lproj;
 			sourceTree = "<group>";
 		};
 		1ED415881F66B7A00070285F = {
@@ -752,6 +764,7 @@
 				1EBA1D481F66D2FA009B8067 /* hay.png in Resources */,
 				1EBA1D5E1F66D2FA009B8067 /* sand1.png in Resources */,
 				1EBA1D551F66D2FA009B8067 /* mud3.png in Resources */,
+				1ED22CFF1F6922C200A8EEE3 /* Localizable.strings in Resources */,
 				1EBA1D9B1F66D2FA009B8067 /* down.png in Resources */,
 				1EBA1D9C1F66D2FA009B8067 /* down@2x.png in Resources */,
 				1EBA1D3F1F66D2FA009B8067 /* concrete1.png in Resources */,
@@ -919,7 +932,7 @@
 				1EBA1C991F66D261009B8067 /* Base */,
 			);
 			name = Main_iPad.storyboard;
-			path = View;
+			path = ../../View;
 			sourceTree = "<group>";
 		};
 		1EBA1C9A1F66D261009B8067 /* Main.storyboard */ = {
@@ -928,7 +941,15 @@
 				1EBA1C9B1F66D261009B8067 /* Base */,
 			);
 			name = Main.storyboard;
-			path = View;
+			path = ../../View;
+			sourceTree = "<group>";
+		};
+		1ED22CFD1F6922C200A8EEE3 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1ED22CFE1F6922C200A8EEE3 /* Base */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 		1ED415A51F66B7A00070285F /* LaunchScreen.storyboard */ = {
@@ -937,7 +958,7 @@
 				1ED415A61F66B7A00070285F /* Base */,
 			);
 			name = LaunchScreen.storyboard;
-			path = UI;
+			path = ..;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
